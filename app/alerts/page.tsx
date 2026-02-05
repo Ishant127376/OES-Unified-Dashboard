@@ -3,15 +3,20 @@
 import { useMemo, useState } from "react";
 import { CheckCheck, Filter } from "lucide-react";
 import { useIoTSimulator } from "@/hooks/useIoTSimulator";
+import { useAuth } from "@/components/auth/AuthContext";
 
 type SeverityFilter = "all" | "critical";
 
 export default function AlertsPage() {
   const { alerts, clearAlerts } = useIoTSimulator();
+  const { role, assignedDeviceIds } = useAuth();
   const [filter, setFilter] = useState<SeverityFilter>("all");
 
   const rows = useMemo(() => {
-    const mapped = alerts.map((a) => {
+    const allowed = role === "Sub-User" ? new Set(assignedDeviceIds.map(String)) : null;
+    const visible = allowed ? alerts.filter((a) => allowed.has(String(a.device_id))) : alerts;
+
+    const mapped = visible.map((a) => {
       const severity = a.value > a.threshold + 10 ? "Critical" : "Warning";
       return {
         ...a,
@@ -22,7 +27,7 @@ export default function AlertsPage() {
     return filter === "critical"
       ? mapped.filter((r) => r.severity === "Critical")
       : mapped;
-  }, [alerts, filter]);
+  }, [alerts, assignedDeviceIds, filter, role]);
 
   return (
     <div className="space-y-4">

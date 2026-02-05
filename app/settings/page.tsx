@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CloudDownload, Settings2, Users } from "lucide-react";
-import { useUser } from "@/components/user/UserContext";
+import { useAuth } from "@/components/auth/AuthContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 type TabKey = "system" | "users" | "ota";
 
@@ -35,7 +36,7 @@ function TabButton({
 }
 
 export default function SettingsPage() {
-  const { user, setRole, isAdmin } = useUser();
+  const { user, isAdmin, role } = useAuth();
   const [tab, setTab] = useState<TabKey>("system");
   const [updateSource, setUpdateSource] = useState<"AWS S3" | "FTP">("AWS S3");
 
@@ -47,6 +48,13 @@ export default function SettingsPage() {
     []
   );
 
+  // DRD 2.1 / Section 7: Sub-Users must not access System Config or OTA.
+  useEffect(() => {
+    if (role === "Sub-User") {
+      if (tab === "system" || tab === "ota") setTab("users");
+    }
+  }, [role, tab]);
+
   return (
     <div className="space-y-4">
       <div>
@@ -55,24 +63,30 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <TabButton
-          active={tab === "system"}
-          label="System Config"
-          icon={<Settings2 className="h-4 w-4" aria-hidden="true" />}
-          onClick={() => setTab("system")}
-        />
+        <RoleGuard role="Admin">
+          <TabButton
+            active={tab === "system"}
+            label="System Config"
+            icon={<Settings2 className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => setTab("system")}
+          />
+        </RoleGuard>
+
         <TabButton
           active={tab === "users"}
           label="User Management"
           icon={<Users className="h-4 w-4" aria-hidden="true" />}
           onClick={() => setTab("users")}
         />
-        <TabButton
-          active={tab === "ota"}
-          label="OTA Updates"
-          icon={<CloudDownload className="h-4 w-4" aria-hidden="true" />}
-          onClick={() => setTab("ota")}
-        />
+
+        <RoleGuard role="Admin">
+          <TabButton
+            active={tab === "ota"}
+            label="OTA Updates"
+            icon={<CloudDownload className="h-4 w-4" aria-hidden="true" />}
+            onClick={() => setTab("ota")}
+          />
+        </RoleGuard>
       </div>
 
       {tab === "system" ? (
@@ -85,10 +99,10 @@ export default function SettingsPage() {
           <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
             <div className="text-xs font-medium text-slate-500">Current Session</div>
             <div className="mt-1 text-sm text-slate-900">
-              Signed in as <span className="font-semibold">{user.name}</span>
+              Signed in as <span className="font-semibold">{user?.email ?? "—"}</span>
             </div>
             <div className="mt-1 text-sm text-slate-700">
-              Role: <span className="font-semibold">{user.role}</span>
+              Role: <span className="font-semibold">{user?.role ?? "—"}</span>
             </div>
           </div>
         </div>
@@ -104,17 +118,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="text-xs font-medium text-slate-500">Demo Role</div>
-              <select
-                value={user.role}
-                onChange={(e) => setRole(e.target.value as "Admin" | "Sub-User")}
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
-              >
-                <option value="Admin">Admin</option>
-                <option value="Sub-User">Sub-User</option>
-              </select>
-            </div>
+            <div className="text-xs font-medium text-slate-500">RBAC</div>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-md border border-slate-200">
@@ -142,6 +146,16 @@ export default function SettingsPage() {
           <div className="mt-3 text-xs text-slate-500">
             Current app mode: <span className="font-semibold">{isAdmin ? "Admin" : "View Only"}</span>
           </div>
+
+          <RoleGuard role="Admin">
+            <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="text-sm font-semibold text-slate-900">Login Activity</div>
+              <div className="mt-1 text-sm text-slate-600">Admin-only view (DRD 2.1).</div>
+              <div className="mt-3 text-xs text-slate-500">
+                View raw activity via <span className="font-mono">/api/admin/activity</span>
+              </div>
+            </div>
+          </RoleGuard>
         </div>
       ) : null}
 
@@ -187,3 +201,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

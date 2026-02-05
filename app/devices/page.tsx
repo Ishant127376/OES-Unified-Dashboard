@@ -5,14 +5,15 @@ import Link from "next/link";
 import { RegisterDeviceModal } from "@/components/devices/RegisterDeviceModal";
 import { DeviceTypeBadge, StatusBadge } from "@/components/devices/DeviceBadges";
 import { useIoTSimulator } from "@/hooks/useIoTSimulator";
-import { useUser } from "@/components/user/UserContext";
+import { useAuth } from "@/components/auth/AuthContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import type { Device } from "@/lib/mock-data";
 
 type StatusFilter = "all" | "connected" | "disconnected";
 
 export default function DevicesPage() {
   const { devices, setDevices } = useIoTSimulator();
-  const { isAdmin } = useUser();
+  const { role, assignedDeviceIds, isAdmin } = useAuth();
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -26,8 +27,10 @@ export default function DevicesPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim();
+    const allowed = role === "Sub-User" ? new Set(assignedDeviceIds.map(String)) : null;
 
     return devices.filter((d) => {
+      if (allowed && !allowed.has(String(d.serialNumber))) return false;
       const matchesSerial = q ? d.serialNumber.includes(q) : true;
       const connected = d.status !== "offline";
       const matchesStatus =
@@ -39,7 +42,7 @@ export default function DevicesPage() {
 
       return matchesSerial && matchesStatus;
     });
-  }, [devices, query, statusFilter]);
+  }, [assignedDeviceIds, devices, query, role, statusFilter]);
 
   function openCreate() {
     setEditTarget(null);
@@ -79,7 +82,7 @@ export default function DevicesPage() {
             {!isAdmin ? " (View Only)" : ""}
           </p>
         </div>
-        {isAdmin ? (
+        <RoleGuard role="Admin">
           <button
             type="button"
             onClick={openCreate}
@@ -87,7 +90,7 @@ export default function DevicesPage() {
           >
             Register New Device
           </button>
-        ) : null}
+        </RoleGuard>
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
@@ -130,9 +133,9 @@ export default function DevicesPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">MAC Address</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Firmware Version</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
-                {isAdmin ? (
+                <RoleGuard role="Admin">
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Actions</th>
-                ) : null}
+                </RoleGuard>
               </tr>
             </thead>
 
@@ -156,7 +159,7 @@ export default function DevicesPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={d.status} />
                   </td>
-                  {isAdmin ? (
+                  <RoleGuard role="Admin">
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
                         <button
@@ -175,7 +178,7 @@ export default function DevicesPage() {
                         </button>
                       </div>
                     </td>
-                  ) : null}
+                  </RoleGuard>
                 </tr>
               ))}
 

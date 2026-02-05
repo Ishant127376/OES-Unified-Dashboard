@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, User } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthContext";
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     function onDocumentClick(event: MouseEvent) {
@@ -30,7 +32,9 @@ export function UserMenu() {
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
           OES
         </span>
-        <span className="hidden text-sm font-medium md:inline">OES Admin</span>
+        <span className="hidden text-sm font-medium md:inline">
+          {user?.email ?? "Account"}
+        </span>
         <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
       </button>
 
@@ -52,7 +56,10 @@ export function UserMenu() {
             type="button"
             role="menuitem"
             className="w-full px-3 py-2 text-left text-sm font-medium text-blue-700 hover:bg-slate-50"
-            onClick={() => setOpen(false)}
+            onClick={async () => {
+              setOpen(false);
+              await signOut();
+            }}
           >
             Sign out
           </button>

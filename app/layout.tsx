@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { UserProvider } from "@/components/user/UserContext";
+import { AuthProvider } from "@/components/auth/AuthContext";
 
 export const metadata: Metadata = {
   title: "OES · Unified IoT Dashboard",
@@ -13,9 +13,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <UserProvider>
+        <AuthProvider>
           <MainLayout>{children}</MainLayout>
-        </UserProvider>
+        </AuthProvider>
       </body>
     </html>
   );

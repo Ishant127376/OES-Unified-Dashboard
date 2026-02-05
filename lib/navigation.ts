@@ -13,7 +13,7 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Devices", href: "/devices", icon: Cpu },
   { label: "Alerts", href: "/alerts", icon: BellRing },
   { label: "Settings", href: "/settings", icon: Settings },
