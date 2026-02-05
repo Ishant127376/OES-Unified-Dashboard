@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CloudDownload, Settings2, Users } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthContext";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 
 type TabKey = "system" | "users" | "ota";
 
@@ -63,14 +62,14 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <RoleGuard role="Admin">
+        {isAdmin ? (
           <TabButton
             active={tab === "system"}
             label="System Config"
             icon={<Settings2 className="h-4 w-4" aria-hidden="true" />}
             onClick={() => setTab("system")}
           />
-        </RoleGuard>
+        ) : null}
 
         <TabButton
           active={tab === "users"}
@@ -79,14 +78,14 @@ export default function SettingsPage() {
           onClick={() => setTab("users")}
         />
 
-        <RoleGuard role="Admin">
+        {isAdmin ? (
           <TabButton
             active={tab === "ota"}
             label="OTA Updates"
             icon={<CloudDownload className="h-4 w-4" aria-hidden="true" />}
             onClick={() => setTab("ota")}
           />
-        </RoleGuard>
+        ) : null}
       </div>
 
       {tab === "system" ? (
@@ -147,7 +146,7 @@ export default function SettingsPage() {
             Current app mode: <span className="font-semibold">{isAdmin ? "Admin" : "View Only"}</span>
           </div>
 
-          <RoleGuard role="Admin">
+          {isAdmin ? (
             <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4">
               <div className="text-sm font-semibold text-slate-900">Login Activity</div>
               <div className="mt-1 text-sm text-slate-600">Admin-only view (DRD 2.1).</div>
@@ -155,7 +154,7 @@ export default function SettingsPage() {
                 View raw activity via <span className="font-mono">/api/admin/activity</span>
               </div>
             </div>
-          </RoleGuard>
+          ) : null}
         </div>
       ) : null}
 

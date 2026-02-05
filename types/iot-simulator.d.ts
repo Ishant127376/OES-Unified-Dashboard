@@ -2,10 +2,17 @@ export {};
 
 declare module "@/lib/mock-data" {
   export type DeviceType = "Smart Meter" | "Gateway" | "HVAC";
-  export type DeviceStatus = "online" | "offline" | "warning";
+  export type DeviceStatus =
+    | "Online"
+    | "Offline"
+    | "Warning"
+    | "online"
+    | "offline"
+    | "warning";
   export type CommunicationProtocol = "MQTT" | "DLMS" | "DNP3";
 
   export type Device = {
+    id?: string;
     serialNumber: string;
     name: string;
     type: DeviceType;
@@ -49,6 +56,7 @@ declare module "@/hooks/useIoTSimulator" {
     alerts: Alert[];
     clearAlerts: () => void;
     onlineCount: number;
+    refreshDevices: () => Promise<void>;
   };
 
   export function useIoTSimulator(): UseIoTSimulatorReturn;

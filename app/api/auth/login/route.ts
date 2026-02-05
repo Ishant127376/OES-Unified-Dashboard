@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { connectToDb } from "@/lib/db";
+import { dbConnect } from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { Device } from "@/lib/models/Device";
 import { signAuthToken } from "@/lib/auth/jwt";
 import { AUTH_COOKIE_NAME } from "@/lib/auth/constants";
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
   }
 
-  await connectToDb();
+  await dbConnect();
   const user = await User.findOne({ email });
   const ipAddress = getIpAddress(request);
 
@@ -46,14 +47,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  const role = user.role;
+  if (role !== "Admin" && role !== "Sub-User") {
+    return NextResponse.json({ error: "Invalid user role" }, { status: 500 });
+  }
+
+  const assignedDevices =
+    role === "Sub-User"
+      ? (await Device.find({ assignedUsers: user._id }).select({ serialNumber: 1 }).lean()).map(
+          (d) => String(d.serialNumber)
+        )
+      : [];
+
   const token = signAuthToken({
     sub: String(user._id),
     email: user.email,
-    role: user.role,
-    assignedDevices: user.assignedDevices,
+    role,
+    assignedDevices,
   });
 
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.json({
+    ok: true,
+    user: {
+      id: String(user._id),
+      email: user.email,
+      role,
+      assignedDevices,
+    },
+  });
   res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

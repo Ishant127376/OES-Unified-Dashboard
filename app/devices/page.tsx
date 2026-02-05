@@ -6,19 +6,30 @@ import { RegisterDeviceModal } from "@/components/devices/RegisterDeviceModal";
 import { DeviceTypeBadge, StatusBadge } from "@/components/devices/DeviceBadges";
 import { useIoTSimulator } from "@/hooks/useIoTSimulator";
 import { useAuth } from "@/components/auth/AuthContext";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import type { Device } from "@/lib/mock-data";
 
 type StatusFilter = "all" | "connected" | "disconnected";
 
 export default function DevicesPage() {
-  const { devices, setDevices } = useIoTSimulator();
+  const { devices, setDevices, refreshDevices } = useIoTSimulator();
   const { role, assignedDeviceIds, isAdmin } = useAuth();
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Device | null>(null);
+  const [editTarget, setEditTarget] = useState<(Device & { id?: string }) | null>(null);
+
+  function normalizeStatus(status: unknown) {
+    return String(status ?? "").trim().toLowerCase();
+  }
+
+  function toApiStatus(status: unknown) {
+    const s = normalizeStatus(status);
+    if (s === "online") return "Online";
+    if (s === "offline") return "Offline";
+    if (s === "warning") return "Warning";
+    return "Offline";
+  }
 
   const existingSerials = useMemo(
     () => new Set(devices.map((d) => d.serialNumber)),
@@ -32,7 +43,7 @@ export default function DevicesPage() {
     return devices.filter((d) => {
       if (allowed && !allowed.has(String(d.serialNumber))) return false;
       const matchesSerial = q ? d.serialNumber.includes(q) : true;
-      const connected = d.status !== "offline";
+      const connected = normalizeStatus(d.status) !== "offline";
       const matchesStatus =
         statusFilter === "all"
           ? true
@@ -54,20 +65,57 @@ export default function DevicesPage() {
     setModalOpen(true);
   }
 
-  function handleSubmit(device: Device) {
-    setDevices((prev) => {
-      const existingIdx = prev.findIndex((d) => d.serialNumber === device.serialNumber);
-      if (existingIdx >= 0) {
-        const next = [...prev];
-        next[existingIdx] = device;
-        return next;
+  async function handleSubmit(device: Device) {
+    if (!isAdmin) return;
+
+    const payload = {
+      ...device,
+      status: toApiStatus(device.status),
+    };
+
+    if (editTarget?.id) {
+      const res = await fetch(`/api/devices/${editTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.device) {
+          setDevices((prev) =>
+            prev.map((d) =>
+              String(d.serialNumber) === String(device.serialNumber) ? data.device : d
+            )
+          );
+        }
       }
-      return [device, ...prev];
+      await refreshDevices();
+      return;
+    }
+
+    const res = await fetch("/api/devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.device) setDevices((prev) => [data.device, ...prev]);
+    }
+    await refreshDevices();
   }
 
-  function handleDelete(serialNumber: string) {
-    setDevices((prev) => prev.filter((d) => d.serialNumber !== serialNumber));
+  async function handleDelete(row: Device & { id?: string }) {
+    if (!isAdmin) return;
+    if (!row.id) {
+      setDevices((prev) => prev.filter((d) => d.serialNumber !== row.serialNumber));
+      return;
+    }
+    const res = await fetch(`/api/devices/${row.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setDevices((prev) => prev.filter((d) => String(d.id ?? "") !== String(row.id)));
+    }
+    await refreshDevices();
   }
 
   const mode = editTarget ? "edit" : "create";
@@ -82,7 +130,7 @@ export default function DevicesPage() {
             {!isAdmin ? " (View Only)" : ""}
           </p>
         </div>
-        <RoleGuard role="Admin">
+        {isAdmin ? (
           <button
             type="button"
             onClick={openCreate}
@@ -90,7 +138,7 @@ export default function DevicesPage() {
           >
             Register New Device
           </button>
-        </RoleGuard>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
@@ -133,9 +181,9 @@ export default function DevicesPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">MAC Address</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Firmware Version</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
-                <RoleGuard role="Admin">
+                {isAdmin ? (
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Actions</th>
-                </RoleGuard>
+                ) : null}
               </tr>
             </thead>
 
@@ -159,7 +207,7 @@ export default function DevicesPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={d.status} />
                   </td>
-                  <RoleGuard role="Admin">
+                  {isAdmin ? (
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
                         <button
@@ -171,14 +219,14 @@ export default function DevicesPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(d.serialNumber)}
+                          onClick={() => void handleDelete(d)}
                           className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         >
                           Delete
                         </button>
                       </div>
                     </td>
-                  </RoleGuard>
+                  ) : null}
                 </tr>
               ))}
 

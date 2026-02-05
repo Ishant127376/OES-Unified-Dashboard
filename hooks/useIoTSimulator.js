@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { initialDevices } from "@/lib/mock-data";
 
 /**
  * Telemetry payload format (DRD Section 3.3)
@@ -32,7 +31,7 @@ const PUBLISH_INTERVAL_MS = 3000;
 const VOLTAGE_ALERT_THRESHOLD = 240;
 
 // Global devices and telemetry so all pages stay in sync.
-let globalDevices = initialDevices;
+let globalDevices = [];
 let globalTelemetryByDevice = {};
 
 /** @type {Set<(devices: any[]) => void>} */
@@ -42,6 +41,27 @@ const telemetryListeners = new Set();
 
 /** @type {number | null} */
 let publisherIntervalId = null;
+
+let devicesLoadPromise = null;
+
+function normalizeStatus(status) {
+  return String(status ?? "").toLowerCase();
+}
+
+async function loadDevicesFromApi() {
+  if (devicesLoadPromise) return devicesLoadPromise;
+  devicesLoadPromise = (async () => {
+    try {
+      const res = await fetch("/api/devices", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data?.devices)) publishDevices(data.devices);
+    } finally {
+      devicesLoadPromise = null;
+    }
+  })();
+  return devicesLoadPromise;
+}
 
 // Simple global alerts store so alerts are shared across hook consumers.
 /** @type {Alert[]} */
@@ -144,7 +164,7 @@ function ensurePublisherRunning() {
     const nextTelemetry = { ...globalTelemetryByDevice };
 
     for (const device of globalDevices) {
-      if (device.status === "offline") continue;
+      if (normalizeStatus(device.status) === "offline") continue;
 
       const telemetry = telemetryForDevice(device);
       const history = nextTelemetry[device.serialNumber] ?? [];
@@ -188,6 +208,7 @@ export function useIoTSimulator() {
 
   useEffect(() => {
     ensurePublisherRunning();
+    void loadDevicesFromApi();
     const unsubDevices = subscribeDevices(setDevicesState);
     const unsubTelemetry = subscribeTelemetry(setTelemetryByDeviceState);
     const unsubAlerts = subscribeAlerts(setAlerts);
@@ -201,7 +222,7 @@ export function useIoTSimulator() {
   }, []);
 
   const onlineCount = useMemo(
-    () => devices.filter((d) => d.status === "online").length,
+    () => devices.filter((d) => normalizeStatus(d.status) === "online").length,
     [devices]
   );
 
@@ -219,5 +240,8 @@ export function useIoTSimulator() {
     alerts,
     clearAlerts,
     onlineCount,
+    refreshDevices: async () => {
+      await loadDevicesFromApi();
+    },
   };
 }

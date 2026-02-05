@@ -8,6 +8,10 @@ export default function DashboardPage() {
   const { devices, telemetryByDevice, alerts, onlineCount, clearAlerts } = useIoTSimulator();
   const { role, assignedDeviceIds } = useAuth();
 
+  function normalizeStatus(status: unknown) {
+    return String(status ?? "").toLowerCase();
+  }
+
   const visibleDevices = useMemo(() => {
     if (role !== "Sub-User") return devices;
     const allowed = new Set(assignedDeviceIds.map(String));
@@ -22,7 +26,7 @@ export default function DashboardPage() {
 
   const visibleOnlineCount = useMemo(() => {
     if (role !== "Sub-User") return onlineCount;
-    return visibleDevices.filter((d) => d.status !== "offline").length;
+    return visibleDevices.filter((d) => normalizeStatus(d.status) !== "offline").length;
   }, [onlineCount, role, visibleDevices]);
 
   const latestByDevice = useMemo(() => {
