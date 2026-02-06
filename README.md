@@ -37,7 +37,7 @@ Create .env.local:
 
 MONGODB_URI=mongodb://localhost:27017/oes_dashboard
 JWT_SECRET=your_secret_key
-
+```
 
 RBAC Overview
 
@@ -76,3 +76,4 @@ Database & Backend Design (Section 8.1) ✅
 
 Author: Ishant Singh
 B.Tech CSE, Thapar University
+
