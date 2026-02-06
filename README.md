@@ -1,33 +1,78 @@
+# Unified IoT Dashboard – Omkar Energy Solutions (OES)
+
+A full-stack IoT management dashboard built as part of the internship evaluation for **Omkar Energy Solutions (OES)**.  
+The project follows the **Unified IoT Dashboard – DRD v1.0** and focuses on secure access control, device management, and backend integrity.
+
+---
+
+## Key Features
+
+- 🔐 **JWT Authentication** with bcrypt password hashing  
+- 👑 **Admin Role**: Full access (users, devices, assignments)  
+- 👤 **Sub-User Role**: View-only access to assigned devices  
+- 🔢 **Mandatory 10-digit Device Serial Numbers** (unique & immutable)  
+- 🗄 **MongoDB-based backend** with structured collections  
+- 🔒 RBAC enforced at both **UI and API level**
+
+---
+
+## Tech Stack
+
+- **Frontend**: React / Next.js  
+- **Backend**: Node.js, Express  
+- **Database**: MongoDB  
+- **Auth**: JWT, bcrypt  
+
+---
+
+## Local Setup
+
+```bash
+git clone https://github.com/Ishant127376/OES-Unified-Dashboard.git
+cd OES-Unified-Dashboard
+npm install
+npm run dev
+
+Create .env.local:
+
+MONGODB_URI=mongodb://localhost:27017/oes_dashboard
+JWT_SECRET=your_secret_key
 
 
+RBAC Overview
 
-README.md: Unified IoT Dashboard (OES)
-📌 Project Overview
-The Omkar Energy Solutions (OES) Dashboard is a full-stack IoT management platform designed for high-scalability and secure device monitoring. It features a robust Role-Based Access Control (RBAC) system, allowing for distinct Admin and Sub-User workflows.
+Admin
 
-🚀 Key Features
-1. Advanced RBAC (DRD Section 2)
-Admin Role: Full system access, including device registration, system health monitoring, and sub-user management.
+Manage users & devices
 
-Sub-User Role: Restricted "View Only" access. Sub-Users only see the specific devices assigned to them by an Admin.
+Assign devices to sub-users
 
-Secure Auth: Implements JWT-based sessions with bcrypt password hashing and login activity logging.
+Full system visibility
 
-2. Device Management (DRD Section 3)
-Fleet Control: Admins can register devices using unique 10-digit serial numbers.
+Sub-User
 
-Smart Assignment: Devices are dynamically linked to users via MongoDB assignedUsers arrays, ensuring strict data privacy.
+View-only dashboard
 
-3. Data Visualization & Monitoring
-Real-time Stats: Dashboard provides instant visibility into total devices online and active system alerts.
+Access limited to assigned devices
 
-Incident History: A dedicated Alerts page tracks system warnings and errors with high-resolution timestamps.
+Project Walkthrough
 
-🛠 Tech Stack
-Frontend: Next.js 14, Tailwind CSS, Recharts (Dual-axis charts).
+Admin & Device Management
+https://www.loom.com/share/66771e52e1a94eaa9e1093dd81848a86
 
-Backend: Node.js, Next.js API Routes.
+RBAC & Sub-User Restrictions
+https://www.loom.com/share/c911fbd442174269a4cfc4e78fe3a1cc
 
-Database: MongoDB (Local/Cloud Atlas support).
+Backend Integrity & Final UI
+https://www.loom.com/share/70d4954743fd490ba4f397c610ef4231
 
-Security: JWT, Middleware-based route guarding.
+DRD Compliance
+
+User Roles & Access Control (Section 2.1) ✅
+
+10-digit Device Identification (Section 3.1) ✅
+
+Database & Backend Design (Section 8.1) ✅
+
+Author: Ishant Singh
+B.Tech CSE, Thapar University
