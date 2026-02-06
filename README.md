@@ -69,7 +69,5 @@ JWT_SECRET=your_secret_key
 B.Tech CSE, Thapar University
 
 
-Author: Ishant Singh
-B.Tech CSE, Thapar University
 
 
