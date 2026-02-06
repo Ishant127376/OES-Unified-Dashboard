@@ -14,16 +14,6 @@ The project follows the **Unified IoT Dashboard – DRD v1.0** and focuses on se
 - 🗄 **MongoDB-based backend** with structured collections  
 - 🔒 RBAC enforced at both **UI and API level**
 
----
-
-## Tech Stack
-
-- **Frontend**: React / Next.js  
-- **Backend**: Node.js, Express  
-- **Database**: MongoDB  
-- **Auth**: JWT, bcrypt  
-
----
 
 ## Local Setup
 
@@ -39,41 +29,47 @@ MONGODB_URI=mongodb://localhost:27017/oes_dashboard
 JWT_SECRET=your_secret_key
 ```
 
-RBAC Overview
+---
 
-Admin
+## RBAC Overview
 
-Manage users & devices
+**Admin**
+- Manage users and devices
+- Assign devices to sub-users
+- Full system visibility
 
-Assign devices to sub-users
+**Sub-User**
+- View-only dashboard
+- Access limited to assigned devices
 
-Full system visibility
+---
 
-Sub-User
+## Project Walkthrough
 
-View-only dashboard
+- **Admin & Device Management**  
+  https://www.loom.com/share/66771e52e1a94eaa9e1093dd81848a86
 
-Access limited to assigned devices
+- **RBAC & Sub-User Restrictions**  
+  https://www.loom.com/share/c911fbd442174269a4cfc4e78fe3a1cc
 
-Project Walkthrough
+- **Backend Integrity & Final UI**  
+  https://www.loom.com/share/70d4954743fd490ba4f397c610ef4231
 
-Admin & Device Management
-https://www.loom.com/share/66771e52e1a94eaa9e1093dd81848a86
+---
 
-RBAC & Sub-User Restrictions
-https://www.loom.com/share/c911fbd442174269a4cfc4e78fe3a1cc
+## DRD Compliance
 
-Backend Integrity & Final UI
-https://www.loom.com/share/70d4954743fd490ba4f397c610ef4231
+- User Roles & Access Control (Section 2.1) ✅  
+- 10-digit Device Identification (Section 3.1) ✅  
+- Database & Backend Design (Section 8.1) ✅  
 
-DRD Compliance
+---
 
-User Roles & Access Control (Section 2.1) ✅
+**Author:** Ishant Singh  
+B.Tech CSE, Thapar University
 
-10-digit Device Identification (Section 3.1) ✅
-
-Database & Backend Design (Section 8.1) ✅
 
 Author: Ishant Singh
 B.Tech CSE, Thapar University
+
 
